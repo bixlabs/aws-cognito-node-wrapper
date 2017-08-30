@@ -1,0 +1,10 @@
+*.log
+npm-debug.log*
+node_modules
+.idea
+.environment_in
+.environment_out
+.env
+dist
+dist.zip
+nohup.out
