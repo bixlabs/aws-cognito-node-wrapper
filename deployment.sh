@@ -3,6 +3,7 @@
 # IMPORTANT: This script is not setting environment variables, you will have to do that manually.
 # make sure that you are using node 8.
 SERVER_FOLDER="aws-cognito-node-wrapper"
+SOURCE_NVM="source .nvm/nvm.sh"
 TRY_TO_CREATE_SERVER_FOLDER="mkdir -p \"${SERVER_FOLDER}\""
 MOVE_TO_SERVER_FOLDER="cd ${SERVER_FOLDER}"
 MOVE_FILES_TO_SERVER_FOLDER="mv ~/package.json . && mv ~/dist.zip . && mv -vn ~/.env ."
@@ -12,7 +13,7 @@ UNZIP_DIST="unzip -o dist.zip"
 # Maybe we can provide the pid as a parameter but this will force developers to enter to the instance.
 KILL_NODE="sudo killall node"
 NODE_RUN_PROCESS="nohup node dist/main &"
-SSH_SCRIPT="${TRY_TO_CREATE_SERVER_FOLDER}; ${MOVE_TO_SERVER_FOLDER}; ${MOVE_FILES_TO_SERVER_FOLDER}; ${NPM_INSTALL}; ${UNZIP_DIST}; ${KILL_NODE}; ${NODE_RUN_PROCESS}"
+SSH_SCRIPT="whoami; ${SOURCE_NVM}; ${TRY_TO_CREATE_SERVER_FOLDER}; ${MOVE_TO_SERVER_FOLDER}; ${MOVE_FILES_TO_SERVER_FOLDER}; ${NPM_INSTALL}; ${UNZIP_DIST}; ${KILL_NODE}; ${NODE_RUN_PROCESS}"
 
 # Make sure we are in master branch and with latest changes
 echo "Making sure master branch is up to date..."
