@@ -763,7 +763,6 @@ class UserService {
    *             type: array
    *             description: "An array of name-value pairs that contain user attributes and attribute values to be set for the user to be created.
    *               An email attribute is required. For custom attributes a custom: prefix must be included"
-   *             $ref: '#/definitions/userAttributes'
    *     responses:
    *       200:
    *         description: User created successfully, awaiting email validation.
@@ -778,7 +777,6 @@ class UserService {
    *                   example: false
    *                 CodeDeliveryDetails:
    *                   type: object
-   *                   $ref: '#/definitions/codeDeliveryDetails'
    *                 UserSub:
    *                   type: string
    *       400:
