@@ -106,8 +106,6 @@ class UserService {
     const signUpDetails = request.body;
     signUpDetails.UserPoolId = credentials.USER_POOL_ID;
     signUpDetails.DesiredDeliveryMediums = ['EMAIL'];
-    const emailValidation = {Name: 'email_verified', Value: 'true'};
-    signUpDetails.UserAttributes.push(emailValidation);
     const cognitoIdentityServiceProvider = new AWS.CognitoIdentityServiceProvider();
     try {
       const data = await cognitoIdentityServiceProvider.adminCreateUser(signUpDetails).promise();

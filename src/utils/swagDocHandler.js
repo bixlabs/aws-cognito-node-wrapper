@@ -14,7 +14,7 @@ export default async function(req, res) {
     swaggerDefinition,
     // we need to put the correct path here, for now it's not correct because the swagger documentation is not 100% working
     // path.resolve('src/user-services/**/*.js')
-    apis: [path.resolve('src/user-services/**/*.js')],
+    apis: [path.resolve(path.join(__dirname, '..', 'user-services/**/*.js'))],
   };
 
   const swaggerSpec = swagger(options);
