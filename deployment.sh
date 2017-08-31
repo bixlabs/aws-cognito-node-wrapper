@@ -2,8 +2,6 @@
 
 # IMPORTANT: This script is not setting environment variables, you will have to do that manually.
 # make sure that you are using node 8.
-echo $MY_AWS_PEM_KEY
-echo "HERE WE ARE"
 SERVER_FOLDER="aws-cognito-node-wrapper"
 TRY_TO_CREATE_SERVER_FOLDER="mkdir -p \"${SERVER_FOLDER}\""
 MOVE_TO_SERVER_FOLDER="cd ${SERVER_FOLDER}"
