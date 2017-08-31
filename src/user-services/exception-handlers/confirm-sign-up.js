@@ -32,7 +32,7 @@ class ConfirmSignUpExceptionHandler {
 
   checkForTooManyFailAttempts() {
     if (this.error.code === 'TooManyFailedAttemptsException') {
-      throw new ResponseError(400, 'Too many fail attempts, please try again later');
+      throw new ResponseError(429, 'Too many fail attempts, please try again later');
     }
   }
 }

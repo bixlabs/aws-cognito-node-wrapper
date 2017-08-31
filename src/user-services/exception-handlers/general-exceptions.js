@@ -34,7 +34,7 @@ class GeneralExceptionHandler {
 
   static checkForTooManyRequests(error) {
     if (error.code === 'TooManyRequestsException') {
-      throw new ResponseError(400, 'Too many requests to this service, please try again later.');
+      throw new ResponseError(429, 'Too many requests to this service, please try again later.');
     }
   }
 
@@ -46,19 +46,19 @@ class GeneralExceptionHandler {
 
   static checkForNotAuthorized(error) {
     if (error.code === 'NotAuthorizedException') {
-      throw new ResponseError(400, error.message);
+      throw new ResponseError(401, error.message);
     }
   }
 
   static checkForResourceNotFound(error) {
     if (error.code === 'ResourceNotFoundException') {
-      throw new ResponseError(400, error.message);
+      throw new ResponseError(404, error.message);
     }
   }
 
   static checkForUserNotFound(error) {
     if (error.code === 'UserNotFoundException') {
-      throw new ResponseError(400, error.message);
+      throw new ResponseError(404, error.message);
     }
   }
 

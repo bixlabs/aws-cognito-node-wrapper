@@ -23,13 +23,13 @@ class ForgotPasswordExceptionHandler {
 
   checkForLimitExceed() {
     if (this.error.code === 'LimitExceededException') {
-      throw new ResponseError(400, 'Attempt limit exceeded, please try after some time.');
+      throw new ResponseError(429, 'Attempt limit exceeded, please try after some time.');
     }
   }
 
   checkForTooManyFailAttempts() {
     if (this.error.code === 'TooManyFailedAttemptsException') {
-      throw new ResponseError(400, 'Too many fail attempts, please try again later');
+      throw new ResponseError(429, 'Too many fail attempts, please try again later');
     }
   }
 
