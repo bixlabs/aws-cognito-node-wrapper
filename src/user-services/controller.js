@@ -37,16 +37,7 @@ class UserService {
    *             type: array
    *             description: "An array of name-value pairs that contain user attributes and attribute values to be set for the user to be created.
    *             An email attribute is required. For custom attributes a custom: prefix must be included"
-   *             items:
-   *               type: object
-   *               properties:
-   *                 Name:
-   *                   type: string
-   *                 Value:
-   *                   type: string
-   *             example: [{Name: "email", Value: "user@domain.com"}, {Name: "given_name", Value: "John"},
-   *             {Name: "family_name", Value: "Doe"}, {Name: "phone_number", Value: "+14325551212"},
-   *             {Name: "custom:work_phone",Value: "+14325551212"}, {Name: "custom:companyId", Value: "id"}]
+   *             $ref: '#/definitions/userAttributes'
    *     responses:
    *       200:
    *         description: "User created successfully."
@@ -79,33 +70,40 @@ class UserService {
    *                       example: "FORCE_CHANGE_PASSWORD"
    *                     Attributes:
    *                       type: array
-   *                       items:
-   *                         type: object
-   *                         properties:
-   *                           Name:
-   *                             type: string
-   *                           Value:
-   *                             type: string
-   *                       example: [{Name: "sub", Value: "subValue"}, {Name: "email", Value: "user@domain.com"},
-   *                       {Name: "given_name", Value: "John"}, {Name: "family_name", Value: "Doe"},
-   *                       {Name: "phone_number", Value: "+14325551212"}, {Name: "custom:work_phone",Value: "+14325551212"},
-   *                       {Name: "custom:companyId", Value: "id"}]
+   *                       $ref: '#/definitions/userAttributesWithSub'
    *       400:
    *         description: Username is already taken, there was a problem delivering the confirmation code or
    *           the user exists already in an unsupported state.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       401:
    *         description: Not authorized.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       404:
    *         description: User not found.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       429:
    *         description: Too many requests.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       500:
    *         description: Something went wrong in the server.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    */
   async createUser(request, response) {
     const signUpDetails = request.body;
     signUpDetails.UserPoolId = credentials.USER_POOL_ID;
     signUpDetails.DesiredDeliveryMediums = ['EMAIL'];
+    const emailValidation = {Name: 'email_verified', Value: 'true'};
+    signUpDetails.UserAttributes.push(emailValidation);
     const cognitoIdentityServiceProvider = new AWS.CognitoIdentityServiceProvider();
     try {
       const data = await cognitoIdentityServiceProvider.adminCreateUser(signUpDetails).promise();
@@ -115,7 +113,6 @@ class UserService {
       resolveErrorAndRespond(error, CreateUserExceptionHandler, response);
     }
   }
-
   /* User login.
    If the user was created by an admin and its the first time logging in, it returns all the requested attributes
    that the user must provide to complete the login (and then confirmLogIn should be called later with that info).
@@ -153,60 +150,32 @@ class UserService {
    *         description: User logged in successfully or a confirm login challenge is thrown.
    *         schema:
    *           type: object
-   *           properties:
-   *             data:
-   *               type: object
-   *               properties:
-   *                 ChallengeName:
-   *                   type: string
-   *                   description: Not returned if the user logged in correctly.
-   *                   example: "NEW_PASSWORD_REQUIRED"
-   *                 Session:
-   *                   type: string
-   *                   description: Session string to be used in the confirm login service as an authentication method.
-   *                     An empty string is returned if the user is in confirmed state.
-   *                   example: "SessionString"
-   *                 ChallengeParameters:
-   *                   type: object
-   *                   description: An empty object is returned if there aren't any challenges (the user logged in successfully).
-   *                   properties:
-   *                     USER_ID_FOR_SRP:
-   *                       type: string
-   *                       description: The user's username. Useful in the confirm login service.
-   *                       example: "johnDoe"
-   *                     requiredAttributes:
-   *                       type: object
-   *                       description: Required attributes that were not set yet.
-   *                       example: []
-   *                     userAttributes:
-   *                       type: object
-   *                       description: The user's current attributes.
-   *                       example: {email_verified: true, phone_number: "+12345678910", given_name: "John",
-   *                         family_name: "Doe", email: "email@domain.com" }
-   *                 AuthenticationResult:
-   *                   type: object
-   *                   description: Only returned if the user logged in correctly (there weren't any pending challenges)
-   *                   properties:
-   *                     AccessToken:
-   *                       type: string
-   *                     IdToken:
-   *                       type: string
-   *                     RefreshToken:
-   *                       type: string
-   *                     ExpiresIn:
-   *                       type: number
-   *                     TokenType:
-   *                       type: string
+   *           $ref: '#/definitions/loginResponse'
    *       400:
    *         description: The user must complete a reset password flow or the user is not confirmed successfully.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       401:
    *         description: Not authorized.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       404:
    *         description: User not found.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       429:
    *         description: Too many requests.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       500:
    *         description: Something went wrong in the server.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    */
   async login(request, response) {
     const loginDetails = request.body;
@@ -258,50 +227,7 @@ class UserService {
    *         description: User logged in and a new password was set successfully.
    *         schema:
    *           type: object
-   *           properties:
-   *             data:
-   *               type: object
-   *               properties:
-   *                 ChallengeName:
-   *                   type: string
-   *                   description: Not returned if the user logged in correctly.
-   *                   example: "NEW_PASSWORD_REQUIRED"
-   *                 Session:
-   *                   type: string
-   *                   description: Session string to be used in the confirm login service as an authentication method.
-   *                     An empty string is returned if the user is in confirmed state.
-   *                   example: "SessionString"
-   *                 ChallengeParameters:
-   *                   type: object
-   *                   description: An empty object is returned if there aren't any challenges (the user logged in successfully).
-   *                   properties:
-   *                     USER_ID_FOR_SRP:
-   *                       type: string
-   *                       description: The user's username. Useful in the confirm login service.
-   *                       example: "johnDoe"
-   *                     requiredAttributes:
-   *                       type: object
-   *                       description: Required attributes that were not set yet.
-   *                       example: []
-   *                     userAttributes:
-   *                       type: object
-   *                       description: The user's current attributes.
-   *                       example: {email_verified: true, phone_number: "+12345678910", given_name: "John",
-   *                         family_name: "Doe", email: "email@domain.com" }
-   *                 AuthenticationResult:
-   *                   type: object
-   *                   description: Only returned if the user logged in correctly (there weren't any pending challenges)
-   *                   properties:
-   *                     AccessToken:
-   *                       type: string
-   *                     IdToken:
-   *                       type: string
-   *                     RefreshToken:
-   *                       type: string
-   *                     ExpiresIn:
-   *                       type: number
-   *                     TokenType:
-   *                       type: string
+   *           $ref: '#/definitions/loginResponse'
    *       400:
    *         description: ' Possible errors:
    *           - The user must complete a reset password flow.
@@ -312,14 +238,29 @@ class UserService {
    *           - Wrong confirmation code.
    *           - The confirmation code expired.
    *           - Invalid password. '
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       401:
    *          description: Not authorized.
+   *          schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       404:
    *         description: User not found.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       429:
    *         description: Too many requests.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       500:
    *         description: Something went wrong in the server.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    */
   async confirmLogin(request, response) {
     const confirmLoginDetails = request.body;
@@ -362,14 +303,29 @@ class UserService {
    *               example: {}
    *       400:
    *         description: Invalid parameters.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       401:
    *         description: Not authorized.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       404:
    *         description: User not found.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       429:
    *         description: Too many requests.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       500:
    *         description: Something went wrong in the server.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    */
   async logout(request, response) {
     const logoutDetails = {
@@ -426,12 +382,24 @@ class UserService {
    *           - The email is not verified.
    *           - Wrong confirmation code.
    *           - The confirmation code expired."
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       404:
    *         description: User not found.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       429:
    *         description: Too many requests or attempt limit exceeded.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       500:
    *         description: Something went wrong in the server.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    */
   async resetPassword(request, response) {
     const resetPasswordDetails = request.body;
@@ -493,14 +461,29 @@ class UserService {
    *               example: {}
    *       400:
    *         description: Email doesn't exist or there are invalid parameters.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       401:
    *         description: Not authorized.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       404:
    *         description: User not found.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       429:
    *         description: Too many requests.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       500:
    *         description: Something went wrong in the server.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    */
   async updateUser(request, response) {
     const userDetails = request.body;
@@ -548,30 +531,31 @@ class UserService {
    *               properties:
    *                 CodeDeliveryDetails:
    *                   type: object
-   *                   properties:
-   *                     Destination:
-   *                       type: string
-   *                       description: Email address where the forgot password email was sent.
-   *                       example: "email@domain.com"
-   *                     DeliveryMedium:
-   *                       type: string
-   *                       Enum: ["EMAIL","SMS"]
-   *                       example: "EMAIL"
-   *                     AttributeName:
-   *                       type: string,
-   *                       example: "email"
+   *                   $ref: '#/definitions/codeDeliveryDetails'
    *       400:
    *         description: "Possible errors:
    *           - The user is not confirmed.
    *           - The email is not verified.
    *           - Wrong confirmation code.
    *           - The confirmation code expired."
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       404:
    *         description: User not found.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       429:
    *         description: Too many requests or attempt limit exceeded.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       500:
    *         description: Something went wrong in the server.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    */
   async forgotPassword(request, response) {
     const forgotPasswordDetails = request.body;
@@ -631,12 +615,24 @@ class UserService {
    *           - The email is not verified.
    *           - Wrong confirmation code.
    *           - The confirmation code expired."
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       404:
    *         description: User not found.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       429:
    *         description: Too many requests or attempt limit exceeded.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       500:
    *         description: Something went wrong in the server.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    */
   async confirmNewPassword(request, response) {
     const confirmNewPasswordDetails = request.body;
@@ -694,27 +690,32 @@ class UserService {
    *                   example: "FORCE_CHANGE_PASSWORD"
    *                 UserAttributes:
    *                   type: array
-   *                   items:
-   *                     type: object
-   *                     properties:
-   *                       Name:
-   *                         type: string
-   *                       Value:
-   *                         type: string
-   *                   example: [{Name: "sub", Value: "subValue"}, {Name: "email", Value: "user@domain.com"},
-   *                     {Name: "given_name", Value: "John"}, {Name: "family_name", Value: "Doe"}, {Name: "email_verified", Value: "true"},
-   *                     {Name: "phone_number", Value: "+14325551212"}, {Name: "custom:work_phone",Value: "+14325551212"},
-   *                     {Name: "custom:companyId", Value: "id"}]
+   *                   $ref: '#/definitions/userAttributesWithSub'
    *       400:
    *         description: Invalid parameters.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       401:
    *         description: Not authorized.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       404:
    *         description: User not found.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       429:
    *         description: Too many requests.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       500:
    *         description: Something went wrong in the server.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    */
   async getUser(request, response) {
     const getUserDetails = {
@@ -762,16 +763,7 @@ class UserService {
    *             type: array
    *             description: "An array of name-value pairs that contain user attributes and attribute values to be set for the user to be created.
    *               An email attribute is required. For custom attributes a custom: prefix must be included"
-   *             items:
-   *               type: object
-   *               properties:
-   *                 Name:
-   *                   type: string
-   *                 Value:
-   *                   type: string
-   *             example: [{Name: "email", Value: "user@domain.com"}, {Name: "given_name", Value: "John"},
-   *               {Name: "family_name", Value: "Doe"}, {Name: "phone_number", Value: "+14325551212"},
-   *               {Name: "custom:work_phone",Value: "+14325551212"}, {Name: "custom:companyId", Value: "id"}]
+   *             $ref: '#/definitions/userAttributes'
    *     responses:
    *       200:
    *         description: User created successfully, awaiting email validation.
@@ -786,35 +778,39 @@ class UserService {
    *                   example: false
    *                 CodeDeliveryDetails:
    *                   type: object
-   *                   properties:
-   *                     Destination:
-   *                       type: string
-   *                       description: Email address where the forgot password email was sent.
-   *                       example: "email@domain.com"
-   *                     DeliveryMedium:
-   *                       type: string
-   *                       Enum: ["EMAIL","SMS"]
-   *                       example: "EMAIL"
-   *                     AttributeName:
-   *                       type: string,
-   *                       example: "email"
+   *                   $ref: '#/definitions/codeDeliveryDetails'
    *                 UserSub:
    *                   type: string
    *       400:
    *         description: "Possible errors:
-   *         - Invalid parameters.
-   *         - Password does not match criteria.
-   *         - Invalid email (for some reason this email can't be used for signup).
-   *         - Username already exists.
-   *         - Error sending the confirmation code."
+   *           - Invalid parameters.
+   *           - Password does not match criteria.
+   *           - Invalid email (for some reason this email can't be used for signup).
+   *           - Username already exists.
+   *           - Error sending the confirmation code."
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       401:
    *         description: Not authorized.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       404:
    *         description: User not found.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       429:
    *         description: Too many requests.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       500:
    *         description: Something went wrong in the server.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    */
   async signUp(request, response) {
     const signUpDetails = request.body;
@@ -873,14 +869,29 @@ class UserService {
    *           - Wrong confirmation code.
    *           - The confirmation code expired.
    *           - Password does not match criteria. "
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       401:
    *         description: Not authorized.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       404:
    *         description: User not found.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       429:
    *         description: Too many requests or failed attempts.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    *       500:
    *         description: Something went wrong in the server.
+   *         schema:
+   *           type: object
+   *           $ref: '#/definitions/error'
    */
   async confirmSignUp(request, response) {
     const confirmSignUpDetails = request.body;
@@ -896,6 +907,100 @@ class UserService {
     }
   }
 
+  /**
+   * @swagger
+   * definitions:
+   *   loginResponse:
+   *     properties:
+   *       data:
+   *         type: object
+   *         properties:
+   *           ChallengeName:
+   *             type: string
+   *             description: Not returned if the user logged in correctly.
+   *             example: "NEW_PASSWORD_REQUIRED"
+   *           Session:
+   *             type: string
+   *             description: Session string to be used in the confirm login service as an authentication method.
+   *               An empty string is returned if the user is in confirmed state.
+   *             example: "SessionString"
+   *           ChallengeParameters:
+   *             type: object
+   *             description: An empty object is returned if there aren't any challenges (the user logged in successfully).
+   *             properties:
+   *               USER_ID_FOR_SRP:
+   *                 type: string
+   *                 description: The user's username. Useful in the confirm login service.
+   *                 example: "johnDoe"
+   *               requiredAttributes:
+   *                 type: object
+   *                 description: Required attributes that were not set yet.
+   *                 example: []
+   *               userAttributes:
+   *                 type: object
+   *                 description: The user's current attributes.
+   *                 example: {email_verified: true, phone_number: "+12345678910", given_name: "John",
+   *                   family_name: "Doe", email: "email@domain.com" }
+   *           AuthenticationResult:
+   *             type: object
+   *             description: Only returned if the user logged in correctly (there weren't any pending challenges)
+   *             properties:
+   *               AccessToken:
+   *                 type: string
+   *               IdToken:
+   *                 type: string
+   *               RefreshToken:
+   *                 type: string
+   *               ExpiresIn:
+   *                 type: number
+   *               TokenType:
+   *                 type: string
+   *   codeDeliveryDetails:
+   *     properties:
+   *       Destination:
+   *         type: string
+   *         description: Email address where the forgot password email was sent.
+   *         example: "email@domain.com"
+   *       DeliveryMedium:
+   *         type: string
+   *         enum: ["EMAIL","SMS"]
+   *         example: "EMAIL"
+   *       AttributeName:
+   *         type: string,
+   *         example: "email"
+   *   userAttributesWithSub:
+   *     items:
+   *       type: object
+   *       properties:
+   *         Name:
+   *           type: string
+   *         Value:
+   *           type: string
+   *     example: [{Name: "sub", Value: "subValue"}, {Name: "email", Value: "user@domain.com"},
+   *       {Name: "given_name", Value: "John"}, {Name: "family_name", Value: "Doe"},
+   *       {Name: "phone_number", Value: "+14325551212"}, {Name: "custom:work_phone",Value: "+14325551212"},
+   *       {Name: "custom:companyId", Value: "id"}]
+   *   userAttributes:
+   *     items:
+   *       type: object
+   *       properties:
+   *         Name:
+   *           type: string
+   *         Value:
+   *           type: string
+   *     example: [{Name: "email", Value: "user@domain.com"},
+   *       {Name: "given_name", Value: "John"}, {Name: "family_name", Value: "Doe"},
+   *       {Name: "phone_number", Value: "+14325551212"}, {Name: "custom:work_phone",Value: "+14325551212"},
+   *       {Name: "custom:companyId", Value: "id"}]
+   *   error:
+   *     properties:
+   *       data:
+   *         type: object
+   *         properties:
+   *           message:
+   *             type: string
+   *             description: The error message.
+   */
 }
 
 export default UserService;
