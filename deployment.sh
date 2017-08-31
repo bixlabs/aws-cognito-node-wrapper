@@ -17,7 +17,7 @@ SSH_SCRIPT="whoami; ${SOURCE_NVM}; ${TRY_TO_CREATE_SERVER_FOLDER}; ${MOVE_TO_SER
 
 # Make sure we are in master branch and with latest changes
 echo "Making sure master branch is up to date..."
-git checkout master && git pull
+git checkout master && git pull origin master
 
 # Make sure dependencies are correct
 echo "Installing node dependencies..."

@@ -1,6 +1,7 @@
 import express from 'express';
 import {swagDocHandler} from '../utils';
-import {common} from '../config';
+import common from '../config';
+
 const router = new express.Router();
 export default function () {
   router.get('/', (request, response) => {
