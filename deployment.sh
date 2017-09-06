@@ -13,7 +13,7 @@ UNZIP_DIST="unzip -o dist.zip"
 # Maybe we can provide the pid as a parameter but this will force developers to enter to the instance.
 KILL_NODE="sudo killall node"
 NODE_RUN_PROCESS="nohup node dist/main &"
-SSH_SCRIPT="whoami; ${SOURCE_NVM}; ${TRY_TO_CREATE_SERVER_FOLDER}; ${MOVE_TO_SERVER_FOLDER}; ${MOVE_FILES_TO_SERVER_FOLDER}; ${NPM_INSTALL}; ${UNZIP_DIST}; ${KILL_NODE}; ${NODE_RUN_PROCESS}"
+SSH_SCRIPT="${SOURCE_NVM}; ${TRY_TO_CREATE_SERVER_FOLDER}; ${MOVE_TO_SERVER_FOLDER}; ${MOVE_FILES_TO_SERVER_FOLDER}; ${NPM_INSTALL}; ${UNZIP_DIST}; ${KILL_NODE}; ${NODE_RUN_PROCESS}"
 
 # Make sure we are in master branch and with latest changes
 echo "Making sure master branch is up to date..."
