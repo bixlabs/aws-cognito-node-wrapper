@@ -1,8 +1,10 @@
 import express from 'express';
 import UserService from './controller';
+import JWTManager from './controllers/jwt-validator';
 const router = new express.Router();
 export default function () {
   const userService = new UserService();
+  const jwtManager = new JWTManager();
   router.post('/create', userService.createUser);
   router.post('/login', userService.login);
   router.post('/confirm-login', userService.confirmLogin);
@@ -14,5 +16,7 @@ export default function () {
   router.post('/confirm-sign-up', userService.confirmSignUp);
   router.get('/logout/:username', userService.logout);
   router.get('/:username', userService.getUser);
+  router.post('/token/refresh', jwtManager.refreshToken.bind(jwtManager));
+  router.post('/token/validate', jwtManager.validateToken.bind(jwtManager));
   return router;
 }
